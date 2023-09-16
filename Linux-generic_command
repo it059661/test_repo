@@ -1,0 +1,46 @@
+---
+- name: Run script
+  hosts: all
+  gather_subset: min
+  become: true
+  vars:
+    cp_dir_unix: "/var/opt/ansible/cp_script"
+    script_name: "script.sh"
+    script_args: ""
+  
+  tasks:
+    - name: Ensuring script folder exists
+      file:
+        path: "{{ cp_dir_unix }}"
+        state: directory
+
+    - name: Copy script file
+      copy: 
+        src: "files/{{ script_name }}"
+        dest: "{{ cp_dir_unix }}"
+        mode: "0744"
+
+    - name: Execute commands
+      shell: "{{ cp_dir_unix }}/{{ script_name }} {{ script_args | default('') }}"
+      register: script_result
+      ignore_errors: true
+      changed_when: false
+
+    #- name: Set result in CSV format
+    #  set_fact:
+    #    csv_result_info: "{{ ansible_facts.hostname }};{{ script_result.stdout | trim | replace('\n',';') }}"
+
+- name: Display results
+  gather_facts: true
+  hosts: localhost
+  connection: local
+
+  #tasks:
+  #  - name: Collect all data
+  #    set_fact:
+  #      all_svc_output_raw: "{{ hostvars | json_query('*.csv_result_info') }}"
+
+   # - name: Display data
+   #  pause:
+   #     prompt: "{{ all_svc_output_raw | join('\n') }}\n"
+   #     seconds: 1
